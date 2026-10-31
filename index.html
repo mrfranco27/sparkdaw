@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spark</title>
+
+<style>
+:root {
+    --background: #626971;
+    --topbar: #454b50;
+    --border: #303438;
+    --hover: #5b6268;
+    --control: #41474c;
+    --control-border: #70777d;
+    --text: #eeeeee;
+    --label-text: #b9c0c5;
+    --track-bg: #4e545b;
+    --grid-line: #1d2023;
+    --sb-bg: #373c41;
+    --sb-thumb: #7e8790;
+    --sb-thumb-hover: #98a2ac;
+}
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+}
+
+#topbar {
+    height: 8%;
+    min-height: 42px;
+    background: var(--topbar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+    position: relative;
+    z-index: 10;
+}
+
+.menu-button {
+    height: 32px;
+    min-width: 54px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 14px Arial, sans-serif;
+    color: var(--text);
+    border: 1px solid transparent;
+    cursor: default;
+}
+
+.menu-button:hover,
+.menu-button.active {
+    background: var(--hover);
+    border-color: #737b82;
+}
+
+#file-dropdown {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 5px;
+    min-width: 175px;
+    padding: 4px;
+    background: var(--topbar);
+    border: 1px solid #747b81;
+    box-shadow: 0 4px 10px #0005;
+}
+
+#file-dropdown.show {
+    display: block;
+}
+
+.dropdown-item {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font: 14px Arial, sans-serif;
+    color: var(--text);
+    cursor: default;
+}
+
+.dropdown-item:hover {
+    background: var(--hover);
+}
+
+#toolbar {
+    height: 8%;
+    min-height: 42px;
+    background: var(--topbar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 10px;
+}
+
+.toolbar-control {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    background: var(--control);
+    border: 1px solid var(--control-border);
+}
+
+.toolbar-control:hover {
+    background: #4b5258;
+    border-color: #92999f;
+}
+
+.toolbar-label {
+    font: 14px Arial, sans-serif;
+    color: var(--label-text);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+#hint-panel {
+    min-width: 150px;
+}
+
+#hint-value {
+    color: var(--text);
+    font: 14px Arial, sans-serif;
+    white-space: nowrap;
+}
+
+#tempo-control {
+    cursor: ns-resize;
+    touch-action: none;
+}
+
+#tempo-value {
+    min-width: 42px;
+    text-align: right;
+    font: 14px Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    pointer-events: none;
+}
+
+#tempo-control.dragging {
+    background: #353b40;
+    border-color: #b0b7bd;
+}
+
+/* WORKSPACE */
+
+#workspace {
+    height: calc(100% - max(16%, 84px));
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--background);
+}
+
+/* BROWSER */
+
+#browser {
+    width: 18%;
+    min-width: 150px;
+    height: 100%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--background);
+    border-right: 2px solid var(--border);
+}
+
+#browser-title {
+    height: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    background: var(--topbar);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font: 14px Arial, sans-serif;
+    cursor: default;
+}
+
+#browser-content {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 3px 0;
+    font: 13px Arial, sans-serif;
+}
+
+.browser-path {
+    padding: 5px 7px;
+    color: var(--label-text);
+    font-size: 11px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3px;
+}
+
+.browser-tree-row {
+    height: 23px;
+    min-height: 23px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding-right: 5px;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.browser-tree-row:hover {
+    background: var(--hover);
+}
+
+.browser-tree-row.selected {
+    background: #4a525a;
+}
+
+.browser-arrow {
+    width: 12px;
+    flex-shrink: 0;
+    text-align: center;
+    color: var(--label-text);
+}
+
+.browser-icon {
+    width: 14px;
+    flex-shrink: 0;
+    text-align: center;
+    color: var(--label-text);
+}
+
+.browser-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.browser-message {
+    padding: 7px;
+    color: var(--label-text);
+    white-space: normal;
+    line-height: 1.4;
+}
+
+.browser-retry {
+    margin: 5px 7px;
+    padding: 4px 10px;
+    color: var(--text);
+    background: var(--control);
+    border: 1px solid var(--control-border);
+    font: 12px Arial, sans-serif;
+    cursor: pointer;
+}
+
+.browser-retry:hover {
+    background: var(--hover);
+}
+
+/* MAIN WORK AREA & PLAYLIST */
+
+#main-area {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#playlist-space {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--background);
+}
+
+#playlist-tools-bar {
+    height: 28px;
+    min-height: 28px;
+    background: var(--topbar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    gap: 4px;
+}
+
+.tool-button {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--control);
+    border: 1px solid var(--control-border);
+    cursor: pointer;
+    font-size: 13px;
+    color: #ffffff;
+}
+
+.tool-button:hover,
+.tool-button.active {
+    background: var(--hover);
+    border-color: #92999f;
+}
+
+#playlist-container {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 130px 1fr 14px;
+    grid-template-rows: 14px 1fr;
+    background: var(--border);
+}
+
+#track-headers {
+    grid-column: 1;
+    grid-row: 2;
+    overflow: hidden;
+    background: var(--topbar);
+    border-right: 1px solid var(--border);
+}
+
+.track-header {
+    height: 52px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--border);
+    padding: 6px 8px;
+    font-size: 11px;
+    color: var(--label-text);
+    background: var(--control);
+    display: flex;
+    align-items: flex-start;
+}
+
+#grid-viewport {
+    grid-column: 2;
+    grid-row: 2;
+    position: relative;
+    overflow: hidden;
+    background: var(--background);
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>') 0 20, auto;
+}
+
+#playlist-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Custom Scrollbars */
+
+.custom-scrollbar {
+    background: var(--sb-bg);
+    position: relative;
+    touch-action: none;
+}
+
+#scrollbar-h {
+    grid-column: 2;
+    grid-row: 1;
+    border-bottom: 1px solid var(--border);
+}
+
+#scrollbar-v {
+    grid-column: 3;
+    grid-row: 2;
+    border-left: 1px solid var(--border);
+}
+
+.scroll-thumb {
+    position: absolute;
+    background: var(--sb-thumb);
+    border: 1px solid var(--border);
+    box-sizing: border-box;
+}
+
+.scroll-thumb:hover, .scroll-thumb.dragging {
+    background: var(--sb-thumb-hover);
+}
+
+#scrollbar-corner {
+    grid-column: 3;
+    grid-row: 1;
+    background: var(--topbar);
+    border-bottom: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+}
+
+/* COMPACT PREVIEW DOCKED INSIDE THE BOTTOM OF THE BROWSER */
+
+#audio-preview {
+    display: none;
+    height: 118px;
+    min-height: 118px;
+    max-height: 118px;
+    flex-shrink: 0;
+    flex-direction: column;
+    margin: 5px 5px 6px;
+    background: #555c63;
+    border: 1px solid var(--border);
+}
+#audio-preview.visible { display: flex; }
+#audio-preview-header {
+    height: 24px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 6px;
+    background: var(--topbar);
+    border-bottom: 1px solid var(--border);
+    font: 11px Arial, sans-serif;
+}
+#audio-preview-title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text);
+}
+#audio-preview-status {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--label-text);
+}
+#audio-wave-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    padding: 5px 6px;
+}
+#audio-waveform {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+#audio-preview-error {
+    display: none;
+    position: absolute;
+    inset: 5px 6px;
+    align-items: center;
+    color: var(--label-text);
+    font: 11px Arial, sans-serif;
+    pointer-events: none;
+}
+#audio-preview-error.visible { display: flex; }
+
+@media (max-width: 600px) {
+    #browser {
+        min-width: 120px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="topbar">
+    <div class="menu-button"
+         id="file-button"
+         data-hint="file">File</div>
+
+    <div id="file-dropdown">
+        <div class="dropdown-item"
+             id="new-button"
+             data-hint="new">New</div>
+    </div>
+</div>
+
+<div id="toolbar">
+    <div class="toolbar-control"
+         id="hint-panel"
+         data-hint="hintPanel">
+        <span class="toolbar-label" id="hint-label"></span>
+        <span id="hint-value"></span>
+    </div>
+
+    <div class="toolbar-control"
+         id="tempo-control"
+         data-hint="tempo">
+        <span class="toolbar-label" id="tempo-label"></span>
+        <span id="tempo-value">120</span>
+    </div>
+</div>
+
+<div id="workspace">
+    <div id="browser" data-hint="browser">
+        <div id="browser-title">Browser</div>
+
+        <div id="browser-content">
+            <div id="browser-path" class="browser-path">
+                ./assets/audio/browser/
+            </div>
+
+            <div id="browser-tree"></div>
+        </div>
+        <div id="audio-preview" data-hint="audioPreview">
+            <div id="audio-preview-header">
+                <span id="audio-preview-title">Audio Preview</span>
+                <span id="audio-preview-status">Ready</span>
+            </div>
+            <div id="audio-wave-wrap">
+                <canvas id="audio-waveform"></canvas>
+                <div id="audio-preview-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-area">
+        <div id="playlist-space">
+            <div id="playlist-tools-bar">
+                <div class="tool-button active" data-hint="draw">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div id="playlist-container">
+                <div id="scrollbar-corner"></div>
+                <div id="scrollbar-h" class="custom-scrollbar">
+                    <div id="thumb-h" class="scroll-thumb"></div>
+                </div>
+                <div id="track-headers"></div>
+                <div id="grid-viewport">
+                    <canvas id="playlist-canvas"></canvas>
+                </div>
+                <div id="scrollbar-v" class="custom-scrollbar">
+                    <div id="thumb-v" class="scroll-thumb"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* =====================================
+   UI STRINGS
+===================================== */
+
+const STRINGS = {
+    windowTitle: "Spark",
+
+    file: "File",
+    new: "New Project",
+
+    hintPanel: "Hint Panel",
+    tempo: "Tempo",
+    browser: "Browser",
+    browserFolder: "Browser Folder",
+    browserAudio: "Audio File",
+    audioPreview: "Audio Preview",
+    previewLoading: "Loading preview...",
+    previewReady: "Ready",
+    previewError: "Could not load audio preview",
+    draw: "Draw",
+
+    initialTempo: 120,
+    minimumTempo: 20,
+    maximumTempo: 400,
+    tempoSensitivity: 0.05
+};
+
+document.title = STRINGS.windowTitle;
+
+document.getElementById("file-button").textContent = STRINGS.file;
+document.getElementById("new-button").textContent = STRINGS.new;
+document.getElementById("hint-label").textContent = STRINGS.hintPanel;
+document.getElementById("tempo-label").textContent = STRINGS.tempo;
+document.getElementById("browser-title").textContent = STRINGS.browser;
+
+/* =====================================
+   DYNAMIC HINT PANEL
+===================================== */
+
+const hintValue = document.getElementById("hint-value");
+
+function showHint(element) {
+    if (!element) return;
+
+    const key = element.dataset.hint;
+
+    if (key && Object.prototype.hasOwnProperty.call(STRINGS, key)) {
+        hintValue.textContent = STRINGS[key];
+    }
+}
+
+document.addEventListener("mouseover", event => {
+    const element = event.target.closest("[data-hint]");
+
+    if (element) showHint(element);
+});
+
+document.addEventListener("mouseout", event => {
+    const nextElement = event.relatedTarget instanceof Element
+        ? event.relatedTarget.closest("[data-hint]")
+        : null;
+
+    if (nextElement) {
+        showHint(nextElement);
+    } else {
+        hintValue.textContent = "";
+    }
+});
+
+/* =====================================
+   GENERAL BEHAVIOR
+===================================== */
+
+document.addEventListener("contextmenu", event => {
+    event.preventDefault();
+});
+
+document.addEventListener("selectstart", event => {
+    event.preventDefault();
+});
+
+/* =====================================
+   FILE MENU
+===================================== */
+
+const fileButton = document.getElementById("file-button");
+const fileDropdown = document.getElementById("file-dropdown");
+
+fileButton.addEventListener("click", event => {
+    event.stopPropagation();
+
+    fileDropdown.classList.toggle("show");
+    fileButton.classList.toggle(
+        "active",
+        fileDropdown.classList.contains("show")
+    );
+});
+
+document.getElementById("new-button").addEventListener("click", () => {
+    location.reload();
+});
+
+document.addEventListener("click", () => {
+    fileDropdown.classList.remove("show");
+    fileButton.classList.remove("active");
+});
+
+fileDropdown.addEventListener("click", event => {
+    event.stopPropagation();
+});
+
+/* =====================================
+   TEMPO CONTROL
+===================================== */
+
+const tempoControl = document.getElementById("tempo-control");
+const tempoValue = document.getElementById("tempo-value");
+
+let tempo = STRINGS.initialTempo;
+let dragging = false;
+let fractionalChange = 0;
+
+function displayTempo() {
+    tempoValue.textContent = String(tempo);
+    tempoControl.setAttribute("aria-valuenow", tempo);
+}
+
+function changeTempo(deltaY) {
+    fractionalChange += -deltaY * STRINGS.tempoSensitivity;
+
+    const wholeChange = Math.trunc(fractionalChange);
+
+    if (wholeChange !== 0) {
+        tempo = Math.max(
+            STRINGS.minimumTempo,
+            Math.min(STRINGS.maximumTempo, tempo + wholeChange)
+        );
+
+        fractionalChange -= wholeChange;
+        displayTempo();
+    }
+}
+
+tempoControl.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || dragging) return;
+
+    dragging = true;
+    fractionalChange = 0;
+    tempoControl.classList.add("dragging");
+
+    if (tempoControl.requestPointerLock) {
+        tempoControl.requestPointerLock();
+    }
+
+    event.preventDefault();
+});
+
+document.addEventListener("pointerlockchange", () => {
+    if (document.pointerLockElement !== tempoControl) {
+        stopDragging();
+    }
+});
+
+document.addEventListener("mousemove", event => {
+    if (dragging && document.pointerLockElement === tempoControl) {
+        changeTempo(event.movementY);
+    }
+});
+
+function stopDragging() {
+    dragging = false;
+    fractionalChange = 0;
+    tempoControl.classList.remove("dragging");
+}
+
+document.addEventListener("mouseup", () => {
+    if (dragging && document.pointerLockElement !== tempoControl) {
+        stopDragging();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        document.pointerLockElement === tempoControl
+    ) {
+        document.exitPointerLock();
+    }
+
+    if (document.activeElement === tempoControl) {
+        if (event.key === "ArrowUp") {
+            tempo = Math.min(STRINGS.maximumTempo, tempo + 1);
+            displayTempo();
+            event.preventDefault();
+        } else if (event.key === "ArrowDown") {
+            tempo = Math.max(STRINGS.minimumTempo, tempo - 1);
+            displayTempo();
+            event.preventDefault();
+        }
+    }
+});
+
+tempoControl.tabIndex = 0;
+tempoControl.setAttribute("role", "spinbutton");
+tempoControl.setAttribute("aria-valuemin", STRINGS.minimumTempo);
+tempoControl.setAttribute("aria-valuemax", STRINGS.maximumTempo);
+
+displayTempo();
+
+/* =====================================
+   AUDIO FILE BROWSER
+===================================== */
+
+const browserTree = document.getElementById("browser-tree");
+const browserPath = document.getElementById("browser-path");
+
+const AUDIO_BROWSER_ENDPOINT = "./audio-browser.php";
+const AUDIO_BROWSER_ROOT = "./assets/audio/browser/";
+
+const expandedFolders = new Set([""]);
+const folderContents = new Map();
+const loadingFolders = new Set();
+
+let selectedBrowserPath = null;
+
+function browserRequest(path) {
+    const url = AUDIO_BROWSER_ENDPOINT +
+        "?path=" + encodeURIComponent(path);
+
+    return fetch(url, { cache: "no-store" }).then(response => {
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        return response.json();
+    });
+}
+
+async function loadBrowserFolder(path, forceRefresh = false) {
+    if (loadingFolders.has(path)) return;
+
+    if (!forceRefresh && folderContents.has(path)) {
+        renderBrowser();
+        return;
+    }
+
+    loadingFolders.add(path);
+    renderBrowser();
+
+    try {
+        const data = await browserRequest(path);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        folderContents.set(path, data);
+    } catch (error) {
+        folderContents.set(path, {
+            error: "Could not scan folder. Check the PHP server and folder path."
+        });
+    } finally {
+        loadingFolders.delete(path);
+        renderBrowser();
+    }
+}
+
+function createBrowserRow(options) {
+    const {
+        name,
+        type,
+        path,
+        depth,
+        expanded = false
+    } = options;
+
+    const row = document.createElement("div");
+
+    row.className = "browser-tree-row";
+    row.dataset.hint = type === "folder"
+        ? "browserFolder"
+        : "browserAudio";
+
+    row.style.paddingLeft = (6 + depth * 14) + "px";
+
+    const arrow = document.createElement("span");
+    arrow.className = "browser-arrow";
+
+    const icon = document.createElement("span");
+    icon.className = "browser-icon";
+
+    const label = document.createElement("span");
+    label.className = "browser-name";
+    label.textContent = name;
+
+    if (type === "folder") {
+        arrow.textContent = expanded ? "▾" : "▸";
+        icon.textContent = "▰";
+    } else {
+        arrow.textContent = "";
+        icon.textContent = "♫";
+    }
+
+    row.append(arrow, icon, label);
+    row.dataset.path = path;
+
+    if (selectedBrowserPath === path) {
+        row.classList.add("selected");
+    }
+
+    if (type === "audio") {
+        row.addEventListener("pointerenter", () => preloadAudioFile(path));
+        row.addEventListener("focus", () => preloadAudioFile(path));
+        row.tabIndex = 0;
+    }
+
+    row.addEventListener("click", async event => {
+        event.stopPropagation();
+
+        selectedBrowserPath = path;
+        renderBrowser();
+
+        if (type === "audio") {
+            previewAudioFile(path, name);
+            return;
+        }
+
+        if (type === "folder") {
+            if (expandedFolders.has(path)) {
+                expandedFolders.delete(path);
+                renderBrowser();
+            } else {
+                expandedFolders.add(path);
+                await loadBrowserFolder(path);
+            }
+        }
+    });
+
+    return row;
+}
+
+function renderBrowser() {
+    browserTree.replaceChildren();
+    browserPath.textContent = AUDIO_BROWSER_ROOT;
+
+    const rootData = folderContents.get("");
+
+    if (loadingFolders.has("") && !rootData) {
+        showBrowserMessage("Scanning audio folders...");
+        return;
+    }
+
+    if (!rootData) {
+        showBrowserMessage("Loading audio folders...");
+        return;
+    }
+
+    if (rootData.error) {
+        showBrowserMessage(rootData.error);
+
+        const retry = document.createElement("button");
+        retry.className = "browser-retry";
+        retry.textContent = "Retry";
+
+        retry.addEventListener("click", () => {
+            folderContents.delete("");
+            loadBrowserFolder("", true);
+        });
+
+        browserTree.appendChild(retry);
+        return;
+    }
+
+    function renderFolderContents(path, depth) {
+        const data = folderContents.get(path);
+
+        if (!data || data.error) return;
+
+        const folders = data.folders || [];
+        const files = data.files || [];
+
+        for (const folder of folders) {
+            const childPath = path
+                ? path + "/" + folder.name
+                : folder.name;
+
+            const expanded = expandedFolders.has(childPath);
+
+            browserTree.appendChild(createBrowserRow({
+                name: folder.name,
+                type: "folder",
+                path: childPath,
+                depth,
+                expanded
+            }));
+
+            if (expanded) {
+                if (loadingFolders.has(childPath)) {
+                    const loading = document.createElement("div");
+                    loading.className = "browser-message";
+                    loading.style.paddingLeft =
+                        (20 + depth * 14) + "px";
+                    loading.textContent = "Loading...";
+                    browserTree.appendChild(loading);
+                } else if (!folderContents.has(childPath)) {
+                    loadBrowserFolder(childPath);
+                } else {
+                    const childData = folderContents.get(childPath);
+
+                    if (childData.error) {
+                        const error = document.createElement("div");
+                        error.className = "browser-message";
+                        error.style.paddingLeft =
+                            (20 + depth * 14) + "px";
+                        error.textContent = childData.error;
+                        browserTree.appendChild(error);
+                    } else {
+                        renderFolderContents(childPath, depth + 1);
+                    }
+                }
+            }
+        }
+
+        for (const file of files) {
+            const filePath = path
+                ? path + "/" + file.name
+                : file.name;
+
+            browserTree.appendChild(createBrowserRow({
+                name: file.name,
+                type: "audio",
+                path: filePath,
+                depth
+            }));
+        }
+    }
+
+    renderFolderContents("", 0);
+}
+
+function showBrowserMessage(message) {
+    const element = document.createElement("div");
+    element.className = "browser-message";
+    element.textContent = message;
+    browserTree.appendChild(element);
+}
+
+/* =====================================
+   AUDIO PREVIEW + LOW-LATENCY CACHE
+===================================== */
+
+const audioPreview = document.getElementById("audio-preview");
+const audioPreviewTitle = document.getElementById("audio-preview-title");
+const audioPreviewStatus = document.getElementById("audio-preview-status");
+const audioWaveform = document.getElementById("audio-waveform");
+const audioWaveWrap = document.getElementById("audio-wave-wrap");
+const audioPreviewError = document.getElementById("audio-preview-error");
+const waveContext = audioWaveform.getContext("2d");
+
+let previewSource = null;
+let previewAnimationFrame = 0;
+let previewRequestId = 0;
+let decodedWaveData = null;
+let previewDuration = 0;
+let previewStartedAt = 0;
+let previewAudioBuffer = null;
+let sparkAudioContext = null;
+const audioBufferCache = new Map();
+const MAX_CACHED_AUDIO = 12;
+
+function getAudioContext() {
+    if (!sparkAudioContext) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) throw new Error("Web Audio is not supported");
+        sparkAudioContext = new AudioContextClass({ latencyHint: "interactive" });
+    }
+    return sparkAudioContext;
+}
+
+function audioFileUrl(relativePath) {
+    return AUDIO_BROWSER_ROOT + relativePath
+        .split("/")
+        .map(part => encodeURIComponent(part))
+        .join("/");
+}
+
+function getAudioBuffer(path) {
+    if (audioBufferCache.has(path)) {
+        const cached = audioBufferCache.get(path);
+        audioBufferCache.delete(path);
+        audioBufferCache.set(path, cached);
+        return cached;
+    }
+
+    const promise = (async () => {
+        const response = await fetch(audioFileUrl(path), { cache: "force-cache" });
+        if (!response.ok) throw new Error("Audio request failed: HTTP " + response.status);
+        const data = await response.arrayBuffer();
+        const context = getAudioContext();
+        return await context.decodeAudioData(data.slice(0));
+    })();
+
+    audioBufferCache.set(path, promise);
+    promise.then(() => trimAudioCache()).catch(() => {
+        if (audioBufferCache.get(path) === promise) audioBufferCache.delete(path);
+    });
+    trimAudioCache();
+    return promise;
+}
+
+function trimAudioCache() {
+    while (audioBufferCache.size > MAX_CACHED_AUDIO) {
+        const oldestPath = audioBufferCache.keys().next().value;
+        if (oldestPath === selectedBrowserPath && audioBufferCache.size > 1) {
+            const value = audioBufferCache.get(oldestPath);
+            audioBufferCache.delete(oldestPath);
+            audioBufferCache.set(oldestPath, value);
+            continue;
+        }
+        audioBufferCache.delete(oldestPath);
+    }
+}
+
+function preloadAudioFile(path) {
+    getAudioBuffer(path).catch(() => {});
+}
+
+function resizeWaveformCanvas() {
+    const rect = audioWaveform.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const ratio = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.round(rect.width * ratio));
+    const height = Math.max(1, Math.round(rect.height * ratio));
+    if (audioWaveform.width !== width || audioWaveform.height !== height) {
+        audioWaveform.width = width;
+        audioWaveform.height = height;
+    }
+    drawWaveform(previewProgress());
+}
+
+function previewProgress() {
+    if (!previewDuration || !previewAudioBuffer || !sparkAudioContext) return 0;
+    if (!previewSource) return previewDuration > 0 ? 1 : 0;
+    return Math.max(0, Math.min(1,
+        (sparkAudioContext.currentTime - previewStartedAt) / previewDuration));
+}
+
+function drawWaveform(progress = 0) {
+    const width = audioWaveform.width;
+    const height = audioWaveform.height;
+    if (!width || !height) return;
+    const ratio = window.devicePixelRatio || 1;
+    const cssWidth = width / ratio;
+    const cssHeight = height / ratio;
+    waveContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+    waveContext.clearRect(0, 0, cssWidth, cssHeight);
+
+    const centerY = cssHeight / 2;
+    waveContext.strokeStyle = "#858d94";
+    waveContext.lineWidth = 1;
+    waveContext.beginPath();
+    waveContext.moveTo(0, centerY);
+    waveContext.lineTo(cssWidth, centerY);
+    waveContext.stroke();
+
+    if (decodedWaveData && decodedWaveData.length > 1) {
+        waveContext.strokeStyle = "#d9dfe3";
+        waveContext.lineWidth = 1;
+        waveContext.beginPath();
+        const samples = decodedWaveData;
+        const count = samples.length;
+        for (let x = 0; x < cssWidth; x++) {
+            const sampleIndex = Math.min(count - 1,
+                Math.floor((x / Math.max(1, cssWidth - 1)) * (count - 1)));
+            const y = centerY - samples[sampleIndex] * (centerY - 2);
+            if (x === 0) waveContext.moveTo(x, y);
+            else waveContext.lineTo(x, y);
+        }
+        waveContext.stroke();
+    }
+
+    const playX = Math.max(0, Math.min(cssWidth, progress * cssWidth));
+    waveContext.strokeStyle = "#f2c94c";
+    waveContext.lineWidth = 1.5;
+    waveContext.beginPath();
+    waveContext.moveTo(Math.round(playX) + 0.5, 0);
+    waveContext.lineTo(Math.round(playX) + 0.5, cssHeight);
+    waveContext.stroke();
+}
+
+function stopPreview() {
+    if (previewAnimationFrame) {
+        cancelAnimationFrame(previewAnimationFrame);
+        previewAnimationFrame = 0;
+    }
+    if (previewSource) {
+        try { previewSource.onended = null; previewSource.stop(); } catch (_) {}
+        try { previewSource.disconnect(); } catch (_) {}
+        previewSource = null;
+    }
+    previewDuration = 0;
+    previewAudioBuffer = null;
+    previewStartedAt = 0;
+    drawWaveform(0);
+}
+
+function animatePreview() {
+    if (!previewSource || !previewDuration || !sparkAudioContext) return;
+    drawWaveform(previewProgress());
+    if (sparkAudioContext.currentTime - previewStartedAt < previewDuration) {
+        previewAnimationFrame = requestAnimationFrame(animatePreview);
+    } else {
+        previewAnimationFrame = 0;
+    }
+}
+
+async function previewAudioFile(path, name) {
+    const requestId = ++previewRequestId;
+    stopPreview();
+    decodedWaveData = null;
+    audioPreview.classList.add("visible");
+    audioPreviewTitle.textContent = name;
+    audioPreviewStatus.textContent = STRINGS.previewLoading;
+    audioPreviewError.textContent = "";
+    audioPreviewError.classList.remove("visible");
+    resizeWaveformCanvas();
+    drawWaveform(0);
+
+    try {
+        const context = getAudioContext();
+        if (context.state === "suspended") await context.resume();
+        const audioBuffer = await getAudioBuffer(path);
+        if (requestId !== previewRequestId) return;
+
+        previewAudioBuffer = audioBuffer;
+        previewDuration = audioBuffer.duration;
+        const frameCount = audioBuffer.length;
+        const channelCount = audioBuffer.numberOfChannels;
+        const channelArrays = [];
+        for (let channel = 0; channel < channelCount; channel++) {
+            channelArrays.push(audioBuffer.getChannelData(channel));
+        }
+        const pointCount = Math.min(12000, frameCount);
+        decodedWaveData = new Float32Array(pointCount);
+        for (let i = 0; i < pointCount; i++) {
+            const frame = Math.min(frameCount - 1, Math.floor(i * frameCount / pointCount));
+            let sum = 0;
+            for (let channel = 0; channel < channelCount; channel++) sum += channelArrays[channel][frame];
+            decodedWaveData[i] = sum / channelCount;
+        }
+
+        const source = context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(context.destination);
+        previewSource = source;
+        previewStartedAt = context.currentTime;
+        source.onended = () => {
+            if (requestId !== previewRequestId) return;
+            if (previewAnimationFrame) cancelAnimationFrame(previewAnimationFrame);
+            previewAnimationFrame = 0;
+            previewSource = null;
+            drawWaveform(1);
+            audioPreviewStatus.textContent = STRINGS.previewReady;
+        };
+        resizeWaveformCanvas();
+        drawWaveform(0);
+        audioPreviewStatus.textContent = STRINGS.previewReady;
+        source.start(0);
+        previewAnimationFrame = requestAnimationFrame(animatePreview);
+    } catch (error) {
+        if (requestId !== previewRequestId) return;
+        audioPreviewStatus.textContent = STRINGS.previewError;
+        audioPreviewError.textContent = STRINGS.previewError;
+        audioPreviewError.classList.add("visible");
+        console.error("Spark audio preview:", error);
+    }
+}
+
+const waveformResizeObserver = new ResizeObserver(resizeWaveformCanvas);
+waveformResizeObserver.observe(audioWaveWrap);
+window.addEventListener("resize", resizeWaveformCanvas);
+
+/* =====================================
+   PLAYLIST ENGINE & CUSTOM SCROLLBARS
+===================================== */
+
+const MAX_TRACKS = 50;
+const TRACK_HEIGHT = 52;
+const BAR_WIDTH = 75;
+
+let scrollX = 0;
+let scrollY = 0;
+
+const trackHeadersEl = document.getElementById("track-headers");
+const playlistCanvas = document.getElementById("playlist-canvas");
+const gridViewport = document.getElementById("grid-viewport");
+const ctx = playlistCanvas.getContext("2d");
+
+const sbH = document.getElementById("scrollbar-h");
+const sbV = document.getElementById("scrollbar-v");
+const thumbH = document.getElementById("thumb-h");
+const thumbV = document.getElementById("thumb-v");
+
+// Populate Track Headers
+for (let i = 1; i <= MAX_TRACKS; i++) {
+    const header = document.createElement("div");
+    header.className = "track-header";
+    header.textContent = `Track ${i}`;
+    trackHeadersEl.appendChild(header);
+}
+
+function updateScrollbars() {
+    const viewportW = gridViewport.clientWidth;
+    const viewportH = gridViewport.clientHeight;
+
+    const totalHeight = MAX_TRACKS * TRACK_HEIGHT;
+    const maxScrollY = Math.max(0, totalHeight - viewportH);
+    scrollY = Math.min(scrollY, maxScrollY);
+
+    // Vertical Thumb
+    const sbVHeight = sbV.clientHeight;
+    const thumbVHeight = Math.max(20, Math.floor((viewportH / totalHeight) * sbVHeight));
+    const thumbVPos = maxScrollY > 0 ? (scrollY / maxScrollY) * (sbVHeight - thumbVHeight) : 0;
+    
+    thumbV.style.height = `${thumbVHeight}px`;
+    thumbV.style.width = `100%`;
+    thumbV.style.top = `${thumbVPos}px`;
+
+    // Horizontal Thumb
+    const sbWWidth = sbH.clientWidth;
+    const thumbWWidth = Math.max(30, Math.floor(sbWWidth * 0.2));
+    const maxScrollX = 6000; 
+    const thumbHPos = (scrollX % maxScrollX) / maxScrollX * (sbWWidth - thumbWWidth);
+
+    thumbH.style.width = `${thumbWWidth}px`;
+    thumbH.style.height = `100%`;
+    thumbH.style.left = `${thumbHPos}px`;
+
+    trackHeadersEl.scrollTop = scrollY;
+}
+
+function drawPlaylistGrid() {
+    const rect = gridViewport.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    playlistCanvas.width = rect.width * dpr;
+    playlistCanvas.height = rect.height * dpr;
+
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = rect.height;
+
+    // 1. Base canvas background
+    ctx.fillStyle = "#626971";
+    ctx.fillRect(0, 0, width, height);
+
+    const startTrack = Math.floor(scrollY / TRACK_HEIGHT);
+    const endTrack = Math.min(MAX_TRACKS, Math.ceil((scrollY + height) / TRACK_HEIGHT));
+
+    // 2. Draw uniform track backgrounds (no alternating track shading)
+    for (let i = startTrack; i < endTrack; i++) {
+        const y = (i * TRACK_HEIGHT) - scrollY;
+        ctx.fillStyle = "#4e545b";
+        ctx.fillRect(0, y, width, TRACK_HEIGHT);
+    }
+
+    // 3. Draw 4-bar alternating background blocks OVER the tracks (1-4 normal, 5-8 darker, repeating)
+    const startBar = Math.floor(scrollX / BAR_WIDTH);
+    const endBar = startBar + Math.ceil(width / BAR_WIDTH) + 2;
+
+    for (let i = startBar; i < endBar; i++) {
+        const x = (i * BAR_WIDTH) - (scrollX % BAR_WIDTH);
+        const blockIndex = Math.floor(Math.abs(i) / 4) % 2;
+        
+        if (blockIndex === 1) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+            ctx.fillRect(x, 0, BAR_WIDTH, height);
+        }
+    }
+
+    // 4. Draw horizontal track separation lines
+    for (let i = startTrack; i < endTrack; i++) {
+        const y = (i * TRACK_HEIGHT) - scrollY;
+        ctx.fillStyle = "#1d2023";
+        ctx.fillRect(0, y + TRACK_HEIGHT - 1, width, 1);
+    }
+
+    // 5. Draw vertical bar grid lines
+    for (let i = startBar; i < endBar; i++) {
+        const x = (i * BAR_WIDTH) - (scrollX % BAR_WIDTH);
+        ctx.fillStyle = "#1d2023";
+        ctx.fillRect(x, 0, 1, height);
+    }
+}
+
+function renderPlaylist() {
+    updateScrollbars();
+    drawPlaylistGrid();
+}
+
+// Native Mouse Wheel Scroll Integration
+gridViewport.addEventListener("wheel", e => {
+    e.preventDefault();
+    scrollX = Math.max(0, scrollX + e.deltaX);
+    scrollY = Math.max(0, Math.min(MAX_TRACKS * TRACK_HEIGHT - gridViewport.clientHeight, scrollY + e.deltaY));
+    renderPlaylist();
+}, { passive: false });
+
+// Scrollbar Dragging Mechanics
+let isDraggingV = false;
+let isDraggingH = false;
+let startStartY = 0;
+let startStartX = 0;
+let startScrollY = 0;
+let startScrollX = 0;
+
+thumbV.addEventListener("pointerdown", e => {
+    isDraggingV = true;
+    startStartY = e.clientY;
+    startScrollY = scrollY;
+    thumbV.classList.add("dragging");
+    e.preventDefault();
+});
+
+thumbH.addEventListener("pointerdown", e => {
+    isDraggingH = true;
+    startStartX = e.clientX;
+    startScrollX = scrollX;
+    thumbH.classList.add("dragging");
+    e.preventDefault();
+});
+
+window.addEventListener("pointermove", e => {
+    if (isDraggingV) {
+        const deltaY = e.clientY - startStartY;
+        const sbVHeight = sbV.clientHeight;
+        const thumbVHeight = thumbV.clientHeight;
+        const maxScrollY = (MAX_TRACKS * TRACK_HEIGHT) - gridViewport.clientHeight;
+        const scrollFactor = maxScrollY / (sbVHeight - thumbVHeight);
+        
+        scrollY = Math.max(0, Math.min(maxScrollY, startScrollY + (deltaY * scrollFactor)));
+        renderPlaylist();
+    }
+    if (isDraggingH) {
+        const deltaX = e.clientX - startStartX;
+        scrollX = Math.max(0, startScrollX + deltaX * 4);
+        renderPlaylist();
+    }
+});
+
+window.addEventListener("pointerup", () => {
+    if (isDraggingV || isDraggingH) {
+        isDraggingV = false;
+        isDraggingH = false;
+        thumbV.classList.remove("dragging");
+        thumbH.classList.remove("dragging");
+    }
+});
+
+const gridResizeObserver = new ResizeObserver(() => renderPlaylist());
+gridResizeObserver.observe(gridViewport);
+
+/* Scan the root directory on startup. */
+loadBrowserFolder("");
+renderPlaylist();
+</script>
+
+</body>
+</html>
