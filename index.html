@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spark</title>
@@ -51,10 +50,29 @@ html, body {
     z-index: 10;
 }
 
+#menu-bar-box {
+    display: flex;
+    background: var(--control);
+    border: 1px solid var(--control-border);
+    height: 30px;
+    align-items: center;
+    padding: 0 2px;
+}
+
+#menu-bar-box:hover {
+    border-color: #92999f;
+}
+
+.menu-wrapper {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
 .menu-button {
-    height: 32px;
-    min-width: 54px;
-    padding: 0 12px;
+    height: 26px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -70,19 +88,20 @@ html, body {
     border-color: #737b82;
 }
 
-#file-dropdown {
+.dropdown-menu {
     display: none;
     position: absolute;
-    top: 36px;
-    left: 5px;
+    top: 30px;
+    left: 0;
     min-width: 175px;
     padding: 4px;
     background: var(--topbar);
     border: 1px solid #747b81;
     box-shadow: 0 4px 10px #0005;
+    z-index: 100;
 }
 
-#file-dropdown.show {
+.dropdown-menu.show {
     display: block;
 }
 
@@ -108,15 +127,15 @@ html, body {
     display: flex;
     align-items: center;
     gap: 7px;
-    padding: 0 10px;
+    padding: 0 5px; /* Matches #topbar padding exactly */
 }
 
 .toolbar-control {
     height: 30px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 8px;
+    gap: 6px;
+    padding: 0 4px;
     background: var(--control);
     border: 1px solid var(--control-border);
 }
@@ -131,9 +150,11 @@ html, body {
     color: var(--label-text);
     white-space: nowrap;
     pointer-events: none;
+    padding-left: 2px;
 }
 
 #hint-panel {
+    /* Dynamically adapts to match #menu-bar-box width via JavaScript */
     min-width: 150px;
 }
 
@@ -141,15 +162,17 @@ html, body {
     color: var(--text);
     font: 14px Arial, sans-serif;
     white-space: nowrap;
+    padding-right: 2px;
 }
 
 #tempo-control {
     cursor: ns-resize;
     touch-action: none;
+    padding-right: 6px;
 }
 
 #tempo-value {
-    min-width: 42px;
+    min-width: 36px;
     text-align: right;
     font: 14px Arial, sans-serif;
     font-variant-numeric: tabular-nums;
@@ -157,10 +180,56 @@ html, body {
     pointer-events: none;
 }
 
-#tempo-control.dragging {
+#tempo-control.dragging,
+#pattern-control.dragging {
     background: #353b40;
     border-color: #b0b7bd;
 }
+
+#pattern-control {
+    cursor: ns-resize;
+    touch-action: none;
+    padding-right: 6px;
+    position: relative;
+}
+
+#pattern-value {
+    min-width: 70px;
+    text-align: right;
+    font: 14px Arial, sans-serif;
+    color: var(--text);
+    pointer-events: none;
+}
+
+#pattern-dropdown {
+    display: none;
+    position: absolute;
+    top: 31px;
+    left: -1px;
+    min-width: 130px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 3px;
+    background: var(--topbar);
+    border: 1px solid #747b81;
+    box-shadow: 0 4px 10px #0005;
+    z-index: 200;
+}
+
+#pattern-dropdown.show { display: block; }
+
+.pattern-option {
+    height: 27px;
+    display: flex;
+    align-items: center;
+    padding: 0 9px;
+    color: var(--text);
+    font: 13px Arial, sans-serif;
+    white-space: nowrap;
+}
+
+.pattern-option:hover { background: var(--hover); }
+.pattern-option.selected { background: #292e32; }
 
 /* WORKSPACE */
 
@@ -204,16 +273,6 @@ html, body {
     overflow: auto;
     padding: 3px 0;
     font: 13px Arial, sans-serif;
-}
-
-.browser-path {
-    padding: 5px 7px;
-    color: var(--label-text);
-    font-size: 11px;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 3px;
 }
 
 .browser-tree-row {
@@ -318,10 +377,15 @@ html, body {
     color: #ffffff;
 }
 
-.tool-button:hover,
-.tool-button.active {
+.tool-button:hover {
     background: var(--hover);
     border-color: #92999f;
+}
+
+.tool-button.active {
+    color: #f2c94c;
+    background: #3b4146;
+    border-color: #f2c94c;
 }
 
 #playlist-container {
@@ -359,7 +423,7 @@ html, body {
     position: relative;
     overflow: hidden;
     background: var(--background);
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>') 0 20, auto;
+    cursor: default;
 }
 
 #playlist-canvas {
@@ -367,6 +431,7 @@ html, body {
     width: 100%;
     height: 100%;
 }
+
 
 /* Custom Scrollbars */
 
@@ -477,30 +542,47 @@ html, body {
 <body>
 
 <div id="topbar">
-    <div class="menu-button"
-         id="file-button"
-         data-hint="file">File</div>
-
-    <div id="file-dropdown">
-        <div class="dropdown-item"
-             id="new-button"
-             data-hint="new">New</div>
+    <div id="menu-bar-box" data-hint="file">
+        <div class="menu-wrapper">
+            <div class="menu-button" id="file-button">File</div>
+            <div class="dropdown-menu" id="file-dropdown">
+                <div class="dropdown-item" id="new-button">New Project</div>
+            </div>
+        </div>
+        <div class="menu-wrapper">
+            <div class="menu-button" id="add-button">Add</div>
+            <div class="dropdown-menu" id="add-dropdown"></div>
+        </div>
+        <div class="menu-wrapper">
+            <div class="menu-button" id="edit-button">Edit</div>
+            <div class="dropdown-menu" id="edit-dropdown"></div>
+        </div>
+        <div class="menu-wrapper">
+            <div class="menu-button" id="view-button">View</div>
+            <div class="dropdown-menu" id="view-dropdown"></div>
+        </div>
+        <div class="menu-wrapper">
+            <div class="menu-button" id="options-button">Options</div>
+            <div class="dropdown-menu" id="options-dropdown"></div>
+        </div>
     </div>
 </div>
 
 <div id="toolbar">
-    <div class="toolbar-control"
-         id="hint-panel"
-         data-hint="hintPanel">
-        <span class="toolbar-label" id="hint-label"></span>
+    <div class="toolbar-control" id="hint-panel" style="width: 266px;">
+        <span class="toolbar-label" id="hint-label">Hint Panel</span>
         <span id="hint-value"></span>
     </div>
 
-    <div class="toolbar-control"
-         id="tempo-control"
-         data-hint="tempo">
-        <span class="toolbar-label" id="tempo-label"></span>
+    <div class="toolbar-control" id="tempo-control" data-hint="tempo" tabindex="0" role="spinbutton" aria-valuemin="20" aria-valuemax="400" aria-valuenow="120">
+        <span class="toolbar-label" id="tempo-label">Tempo</span>
         <span id="tempo-value">120</span>
+    </div>
+
+    <div class="toolbar-control" id="pattern-control" data-hint="pattern" tabindex="0" role="spinbutton">
+        <span class="toolbar-label">Pattern</span>
+        <span id="pattern-value">Pattern 1</span>
+        <div id="pattern-dropdown"><div class="pattern-option selected">Pattern 1</div><div class="pattern-option">Pattern 2</div><div class="pattern-option">Pattern 3</div><div class="pattern-option">Pattern 4</div><div class="pattern-option">Pattern 5</div><div class="pattern-option">Pattern 6</div><div class="pattern-option">Pattern 7</div><div class="pattern-option">Pattern 8</div><div class="pattern-option">Pattern 9</div><div class="pattern-option">Pattern 10</div><div class="pattern-option">Pattern 11</div><div class="pattern-option">Pattern 12</div><div class="pattern-option">Pattern 13</div><div class="pattern-option">Pattern 14</div><div class="pattern-option">Pattern 15</div><div class="pattern-option">Pattern 16</div><div class="pattern-option">Pattern 17</div><div class="pattern-option">Pattern 18</div><div class="pattern-option">Pattern 19</div><div class="pattern-option">Pattern 20</div></div>
     </div>
 </div>
 
@@ -509,19 +591,15 @@ html, body {
         <div id="browser-title">Browser</div>
 
         <div id="browser-content">
-            <div id="browser-path" class="browser-path">
-                ./assets/audio/browser/
-            </div>
-
-            <div id="browser-tree"></div>
+            <div id="browser-tree"><div class="browser-tree-row" data-hint="browserFolder" data-path="Default" style="padding-left: 6px;"><span class="browser-arrow">▾</span><span class="browser-icon">▰</span><span class="browser-name">Default</span></div><div class="browser-tree-row" data-hint="browserAudio" data-path="Default/Club Clap.wav" tabindex="0" style="padding-left: 20px;"><span class="browser-arrow"></span><span class="browser-icon">♫</span><span class="browser-name">Club Clap.wav</span></div><div class="browser-tree-row" data-hint="browserAudio" data-path="Default/Club Hi-Hat.wav" tabindex="0" style="padding-left: 20px;"><span class="browser-arrow"></span><span class="browser-icon">♫</span><span class="browser-name">Club Hi-Hat.wav</span></div><div class="browser-tree-row selected" data-hint="browserAudio" data-path="Default/Club Kick.wav" tabindex="0" style="padding-left: 20px;"><span class="browser-arrow"></span><span class="browser-icon">♫</span><span class="browser-name">Club Kick.wav</span></div><div class="browser-tree-row" data-hint="browserAudio" data-path="Default/Club Snare.wav" tabindex="0" style="padding-left: 20px;"><span class="browser-arrow"></span><span class="browser-icon">♫</span><span class="browser-name">Club Snare.wav</span></div></div>
         </div>
-        <div id="audio-preview" data-hint="audioPreview">
+        <div id="audio-preview" data-hint="audioPreview" class="visible">
             <div id="audio-preview-header">
-                <span id="audio-preview-title">Audio Preview</span>
+                <span id="audio-preview-title">Club Kick.wav</span>
                 <span id="audio-preview-status">Ready</span>
             </div>
             <div id="audio-wave-wrap">
-                <canvas id="audio-waveform"></canvas>
+                <canvas id="audio-waveform" width="124" height="82"></canvas>
                 <div id="audio-preview-error"></div>
             </div>
         </div>
@@ -530,9 +608,15 @@ html, body {
     <div id="main-area">
         <div id="playlist-space">
             <div id="playlist-tools-bar">
-                <div class="tool-button active" data-hint="draw">
+                <div class="tool-button active" id="draw-tool" data-tool="draw" data-hint="draw" title="Draw">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                </div>
+                <div class="tool-button" id="delete-tool" data-tool="delete" data-hint="delete" title="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M5.6 18.4 18.4 5.6"></path>
                     </svg>
                 </div>
             </div>
@@ -540,14 +624,14 @@ html, body {
             <div id="playlist-container">
                 <div id="scrollbar-corner"></div>
                 <div id="scrollbar-h" class="custom-scrollbar">
-                    <div id="thumb-h" class="scroll-thumb"></div>
+                    <div id="thumb-h" class="scroll-thumb" style="width: 101px; height: 100%; left: 0px;"></div>
                 </div>
-                <div id="track-headers"></div>
-                <div id="grid-viewport">
-                    <canvas id="playlist-canvas"></canvas>
+                <div id="track-headers"><div class="track-header">Track 1</div><div class="track-header">Track 2</div><div class="track-header">Track 3</div><div class="track-header">Track 4</div><div class="track-header">Track 5</div><div class="track-header">Track 6</div><div class="track-header">Track 7</div><div class="track-header">Track 8</div><div class="track-header">Track 9</div><div class="track-header">Track 10</div><div class="track-header">Track 11</div><div class="track-header">Track 12</div><div class="track-header">Track 13</div><div class="track-header">Track 14</div><div class="track-header">Track 15</div><div class="track-header">Track 16</div><div class="track-header">Track 17</div><div class="track-header">Track 18</div><div class="track-header">Track 19</div><div class="track-header">Track 20</div><div class="track-header">Track 21</div><div class="track-header">Track 22</div><div class="track-header">Track 23</div><div class="track-header">Track 24</div><div class="track-header">Track 25</div><div class="track-header">Track 26</div><div class="track-header">Track 27</div><div class="track-header">Track 28</div><div class="track-header">Track 29</div><div class="track-header">Track 30</div><div class="track-header">Track 31</div><div class="track-header">Track 32</div><div class="track-header">Track 33</div><div class="track-header">Track 34</div><div class="track-header">Track 35</div><div class="track-header">Track 36</div><div class="track-header">Track 37</div><div class="track-header">Track 38</div><div class="track-header">Track 39</div><div class="track-header">Track 40</div><div class="track-header">Track 41</div><div class="track-header">Track 42</div><div class="track-header">Track 43</div><div class="track-header">Track 44</div><div class="track-header">Track 45</div><div class="track-header">Track 46</div><div class="track-header">Track 47</div><div class="track-header">Track 48</div><div class="track-header">Track 49</div><div class="track-header">Track 50</div><div class="track-header">Track 1</div><div class="track-header">Track 2</div><div class="track-header">Track 3</div><div class="track-header">Track 4</div><div class="track-header">Track 5</div><div class="track-header">Track 6</div><div class="track-header">Track 7</div><div class="track-header">Track 8</div><div class="track-header">Track 9</div><div class="track-header">Track 10</div><div class="track-header">Track 11</div><div class="track-header">Track 12</div><div class="track-header">Track 13</div><div class="track-header">Track 14</div><div class="track-header">Track 15</div><div class="track-header">Track 16</div><div class="track-header">Track 17</div><div class="track-header">Track 18</div><div class="track-header">Track 19</div><div class="track-header">Track 20</div><div class="track-header">Track 21</div><div class="track-header">Track 22</div><div class="track-header">Track 23</div><div class="track-header">Track 24</div><div class="track-header">Track 25</div><div class="track-header">Track 26</div><div class="track-header">Track 27</div><div class="track-header">Track 28</div><div class="track-header">Track 29</div><div class="track-header">Track 30</div><div class="track-header">Track 31</div><div class="track-header">Track 32</div><div class="track-header">Track 33</div><div class="track-header">Track 34</div><div class="track-header">Track 35</div><div class="track-header">Track 36</div><div class="track-header">Track 37</div><div class="track-header">Track 38</div><div class="track-header">Track 39</div><div class="track-header">Track 40</div><div class="track-header">Track 41</div><div class="track-header">Track 42</div><div class="track-header">Track 43</div><div class="track-header">Track 44</div><div class="track-header">Track 45</div><div class="track-header">Track 46</div><div class="track-header">Track 47</div><div class="track-header">Track 48</div><div class="track-header">Track 49</div><div class="track-header">Track 50</div></div>
+                <div id="grid-viewport" style="cursor: default;">
+                    <canvas id="playlist-canvas" width="509" height="492"></canvas>
                 </div>
                 <div id="scrollbar-v" class="custom-scrollbar">
-                    <div id="thumb-v" class="scroll-thumb"></div>
+                    <div id="thumb-v" class="scroll-thumb" style="height: 93px; width: 100%; top: 0px;"></div>
                 </div>
             </div>
         </div>
@@ -563,10 +647,15 @@ const STRINGS = {
     windowTitle: "Spark",
 
     file: "File",
+    add: "Add",
+    edit: "Edit",
+    view: "View",
+    options: "Options",
     new: "New Project",
 
     hintPanel: "Hint Panel",
     tempo: "Tempo",
+    pattern: "Pattern Selector",
     browser: "Browser",
     browserFolder: "Browser Folder",
     browserAudio: "Audio File",
@@ -575,6 +664,8 @@ const STRINGS = {
     previewReady: "Ready",
     previewError: "Could not load audio preview",
     draw: "Draw",
+    delete: "Delete",
+    pattern: "Pattern Selector",
 
     initialTempo: 120,
     minimumTempo: 20,
@@ -585,16 +676,31 @@ const STRINGS = {
 document.title = STRINGS.windowTitle;
 
 document.getElementById("file-button").textContent = STRINGS.file;
+document.getElementById("add-button").textContent = STRINGS.add;
+document.getElementById("edit-button").textContent = STRINGS.edit;
+document.getElementById("view-button").textContent = STRINGS.view;
+document.getElementById("options-button").textContent = STRINGS.options;
 document.getElementById("new-button").textContent = STRINGS.new;
 document.getElementById("hint-label").textContent = STRINGS.hintPanel;
 document.getElementById("tempo-label").textContent = STRINGS.tempo;
 document.getElementById("browser-title").textContent = STRINGS.browser;
 
 /* =====================================
-   DYNAMIC HINT PANEL
+   DYNAMIC HINT PANEL & SIZING SYNC
 ===================================== */
 
 const hintValue = document.getElementById("hint-value");
+const menuBarBox = document.getElementById("menu-bar-box");
+const hintPanel = document.getElementById("hint-panel");
+
+function syncHintPanelWidth() {
+    if (menuBarBox && hintPanel) {
+        hintPanel.style.width = menuBarBox.offsetWidth + "px";
+    }
+}
+
+window.addEventListener("load", syncHintPanelWidth);
+window.addEventListener("resize", syncHintPanelWidth);
 
 function showHint(element) {
     if (!element) return;
@@ -637,20 +743,34 @@ document.addEventListener("selectstart", event => {
 });
 
 /* =====================================
-   FILE MENU
+   MENU BAR DROPDOWNS
 ===================================== */
 
-const fileButton = document.getElementById("file-button");
-const fileDropdown = document.getElementById("file-dropdown");
+const menuWrappers = document.querySelectorAll(".menu-wrapper");
 
-fileButton.addEventListener("click", event => {
-    event.stopPropagation();
+menuWrappers.forEach(wrapper => {
+    const button = wrapper.querySelector(".menu-button");
+    const dropdown = wrapper.querySelector(".dropdown-menu");
 
-    fileDropdown.classList.toggle("show");
-    fileButton.classList.toggle(
-        "active",
-        fileDropdown.classList.contains("show")
-    );
+    button.addEventListener("click", event => {
+        event.stopPropagation();
+
+        const isOpen = dropdown.classList.contains("show");
+        
+        document.querySelectorAll(".dropdown-menu").forEach(d => d.classList.remove("show"));
+        document.querySelectorAll(".menu-button").forEach(b => b.classList.remove("active"));
+
+        if (!isOpen) {
+            dropdown.classList.add("show");
+            button.classList.add("active");
+        }
+    });
+
+    if (dropdown) {
+        dropdown.addEventListener("click", event => {
+            event.stopPropagation();
+        });
+    }
 });
 
 document.getElementById("new-button").addEventListener("click", () => {
@@ -658,12 +778,8 @@ document.getElementById("new-button").addEventListener("click", () => {
 });
 
 document.addEventListener("click", () => {
-    fileDropdown.classList.remove("show");
-    fileButton.classList.remove("active");
-});
-
-fileDropdown.addEventListener("click", event => {
-    event.stopPropagation();
+    document.querySelectorAll(".dropdown-menu").forEach(d => d.classList.remove("show"));
+    document.querySelectorAll(".menu-button").forEach(b => b.classList.remove("active"));
 });
 
 /* =====================================
@@ -765,14 +881,122 @@ tempoControl.setAttribute("aria-valuemax", STRINGS.maximumTempo);
 displayTempo();
 
 /* =====================================
+   PATTERN SELECTOR + TOOL SELECTION
+===================================== */
+
+const patternControl = document.getElementById("pattern-control");
+const patternValue = document.getElementById("pattern-value");
+const patternDropdown = document.getElementById("pattern-dropdown");
+const drawTool = document.getElementById("draw-tool");
+const deleteTool = document.getElementById("delete-tool");
+
+let selectedTool = "draw";
+let selectedPattern = 1;
+let patternCount = 1;
+let patternDragging = false;
+let patternDragStartY = 0;
+let patternDragStartIndex = 1;
+let patternDragRemainder = 0;
+
+function setSelectedTool(tool) {
+    selectedTool = tool;
+    drawTool.classList.toggle("active", tool === "draw");
+    deleteTool.classList.toggle("active", tool === "delete");
+}
+
+drawTool.addEventListener("click", () => setSelectedTool("draw"));
+deleteTool.addEventListener("click", () => setSelectedTool("delete"));
+
+function ensurePatternExists(number) {
+    while (patternCount < number) patternCount++;
+}
+
+function setSelectedPattern(number) {
+    selectedPattern = Math.max(1, Math.min(999, Math.round(number)));
+    ensurePatternExists(selectedPattern);
+    patternValue.textContent = "Pattern " + selectedPattern;
+    renderPatternDropdown();
+    renderPlaylist();
+}
+
+function renderPatternDropdown() {
+    patternDropdown.replaceChildren();
+    for (let number = 1; number <= patternCount; number++) {
+        const option = document.createElement("div");
+        option.className = "pattern-option" +
+            (number === selectedPattern ? " selected" : "");
+        option.textContent = "Pattern " + number;
+        option.addEventListener("click", event => {
+            event.stopPropagation();
+            setSelectedPattern(number);
+            patternDropdown.classList.remove("show");
+        });
+        patternDropdown.appendChild(option);
+    }
+}
+
+patternControl.addEventListener("contextmenu", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    renderPatternDropdown();
+    patternDropdown.classList.toggle("show");
+});
+
+patternControl.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || event.target.closest("#pattern-dropdown")) return;
+    patternDragging = true;
+    patternDragStartY = event.clientY;
+    patternDragStartIndex = selectedPattern;
+    patternDragRemainder = 0;
+    patternControl.classList.add("dragging");
+    patternControl.setPointerCapture(event.pointerId);
+    event.preventDefault();
+});
+
+patternControl.addEventListener("pointermove", event => {
+    if (!patternDragging) return;
+    const movement = patternDragStartY - event.clientY;
+    const steps = Math.trunc(movement / 8);
+    if (steps !== 0) setSelectedPattern(patternDragStartIndex + steps);
+});
+
+function stopPatternDragging() {
+    patternDragging = false;
+    patternControl.classList.remove("dragging");
+}
+
+patternControl.addEventListener("pointerup", stopPatternDragging);
+patternControl.addEventListener("pointercancel", stopPatternDragging);
+patternControl.addEventListener("lostpointercapture", stopPatternDragging);
+
+document.addEventListener("click", event => {
+    if (!patternControl.contains(event.target)) {
+        patternDropdown.classList.remove("show");
+    }
+});
+
+patternControl.addEventListener("keydown", event => {
+    if (event.key === "ArrowUp") {
+        setSelectedPattern(selectedPattern + 1);
+        event.preventDefault();
+    } else if (event.key === "ArrowDown") {
+        setSelectedPattern(selectedPattern - 1);
+        event.preventDefault();
+    }
+});
+patternControl.tabIndex = 0;
+patternControl.setAttribute("role", "spinbutton");
+renderPatternDropdown();
+setSelectedTool("draw");
+
+/* =====================================
    AUDIO FILE BROWSER
 ===================================== */
 
 const browserTree = document.getElementById("browser-tree");
-const browserPath = document.getElementById("browser-path");
 
 const AUDIO_BROWSER_ENDPOINT = "./audio-browser.php";
-const AUDIO_BROWSER_ROOT = "./assets/audio/browser/";
+const AUDIO_BROWSER_ROOT = "./Assets/Audio/Browser/";
 
 const expandedFolders = new Set([""]);
 const folderContents = new Map();
@@ -898,7 +1122,6 @@ function createBrowserRow(options) {
 
 function renderBrowser() {
     browserTree.replaceChildren();
-    browserPath.textContent = AUDIO_BROWSER_ROOT;
 
     const rootData = folderContents.get("");
 
@@ -1245,6 +1468,11 @@ const MAX_TRACKS = 50;
 const TRACK_HEIGHT = 52;
 const BAR_WIDTH = 75;
 
+const playlistPatterns = [];
+const deleteSilhouettes = [];
+let nextPatternId = 2;
+let silhouetteAnimationFrame = 0;
+
 let scrollX = 0;
 let scrollY = 0;
 
@@ -1286,7 +1514,7 @@ function updateScrollbars() {
     // Horizontal Thumb
     const sbWWidth = sbH.clientWidth;
     const thumbWWidth = Math.max(30, Math.floor(sbWWidth * 0.2));
-    const maxScrollX = 6000; 
+    const maxScrollX = 60000; 
     const thumbHPos = (scrollX % maxScrollX) / maxScrollX * (sbWWidth - thumbWWidth);
 
     thumbH.style.width = `${thumbWWidth}px`;
@@ -1315,19 +1543,20 @@ function drawPlaylistGrid() {
     const startTrack = Math.floor(scrollY / TRACK_HEIGHT);
     const endTrack = Math.min(MAX_TRACKS, Math.ceil((scrollY + height) / TRACK_HEIGHT));
 
-    // 2. Draw uniform track backgrounds (no alternating track shading)
+    // 2. Draw uniform track backgrounds
     for (let i = startTrack; i < endTrack; i++) {
         const y = (i * TRACK_HEIGHT) - scrollY;
         ctx.fillStyle = "#4e545b";
         ctx.fillRect(0, y, width, TRACK_HEIGHT);
     }
 
-    // 3. Draw 4-bar alternating background blocks OVER the tracks (1-4 normal, 5-8 darker, repeating)
+    // 3. Draw 4-bar alternating background blocks OVER the tracks with stable coordinate calculations
     const startBar = Math.floor(scrollX / BAR_WIDTH);
     const endBar = startBar + Math.ceil(width / BAR_WIDTH) + 2;
+    const offsetX = scrollX % BAR_WIDTH;
 
     for (let i = startBar; i < endBar; i++) {
-        const x = (i * BAR_WIDTH) - (scrollX % BAR_WIDTH);
+        const x = Math.round((i - startBar) * BAR_WIDTH - offsetX);
         const blockIndex = Math.floor(Math.abs(i) / 4) % 2;
         
         if (blockIndex === 1) {
@@ -1343,12 +1572,79 @@ function drawPlaylistGrid() {
         ctx.fillRect(0, y + TRACK_HEIGHT - 1, width, 1);
     }
 
-    // 5. Draw vertical bar grid lines
+    // 5. Draw vertical bar grid lines with stable offsets
     for (let i = startBar; i < endBar; i++) {
-        const x = (i * BAR_WIDTH) - (scrollX % BAR_WIDTH);
+        const x = Math.round((i - startBar) * BAR_WIDTH - offsetX);
         ctx.fillStyle = "#1d2023";
         ctx.fillRect(x, 0, 1, height);
     }
+
+    // Show the four beat divisions inside each bar. Alt-drag uses
+    // finer 1/96-beat snap points without cluttering the timeline.
+    const beatWidth = BAR_WIDTH / 4;
+    const startBeat = Math.floor(scrollX / beatWidth);
+    const endBeat = Math.ceil((scrollX + width) / beatWidth);
+    for (let beat = startBeat; beat <= endBeat; beat++) {
+        if (beat % 4 === 0) continue; // Bar lines are drawn above.
+        const x = Math.round(beat * beatWidth - scrollX);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+        ctx.fillRect(x, 0, 1, height);
+    }
+
+    // 6. Draw pattern clips over the playlist grid.
+    for (const pattern of playlistPatterns) {
+        const x = pattern.bar * BAR_WIDTH - scrollX;
+        const y = pattern.track * TRACK_HEIGHT - scrollY;
+        if (x + BAR_WIDTH < 0 || x > width ||
+            y + TRACK_HEIGHT < 0 || y > height) continue;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.38)";
+        ctx.fillRect(x + 1, y + 1, BAR_WIDTH - 2, TRACK_HEIGHT - 2);
+
+        ctx.fillStyle = "rgba(24, 27, 30, 0.82)";
+        ctx.fillRect(x + 1, y + 1, BAR_WIDTH - 2, 17);
+
+        ctx.strokeStyle = "rgba(15, 17, 19, 0.9)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, BAR_WIDTH - 1, TRACK_HEIGHT - 1);
+
+        ctx.fillStyle = "#e5e8ea";
+        ctx.font = "11px Arial";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Pattern " + pattern.number, x + 6, y + 9.5);
+    }
+
+    // 7. Expanding, fading outlines left by deleted patterns.
+    const now = performance.now();
+    for (let i = deleteSilhouettes.length - 1; i >= 0; i--) {
+        const silhouette = deleteSilhouettes[i];
+        const progress = Math.min(1, (now - silhouette.startedAt) / 360);
+        const grow = 1 + progress * 0.10;
+        const alpha = 1 - progress;
+        const baseX = silhouette.bar * BAR_WIDTH - scrollX;
+        const baseY = silhouette.track * TRACK_HEIGHT - scrollY;
+        const w = BAR_WIDTH * grow;
+        const h = TRACK_HEIGHT * grow;
+        const x = baseX - (w - BAR_WIDTH) / 2;
+        const y = baseY - (h - TRACK_HEIGHT) / 2;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x + 0.75, y + 0.75, w - 1.5, h - 1.5);
+        ctx.restore();
+
+        if (progress >= 1) deleteSilhouettes.splice(i, 1);
+    }
+    if (deleteSilhouettes.length && !silhouetteAnimationFrame) {
+        silhouetteAnimationFrame = requestAnimationFrame(animateDeleteSilhouettes);
+    }
+}
+
+function animateDeleteSilhouettes() {
+    silhouetteAnimationFrame = 0;
+    renderPlaylist();
 }
 
 function renderPlaylist() {
@@ -1415,6 +1711,159 @@ window.addEventListener("pointerup", () => {
     }
 });
 
+// Playlist editing: four beats per bar. Holding Alt exposes 1/96-beat
+// precision (384 snap positions per bar).
+const BEATS_PER_BAR = 4;
+const DEFAULT_SNAP = BAR_WIDTH / BEATS_PER_BAR;
+const ALT_SNAP = BAR_WIDTH / (BEATS_PER_BAR * 96);
+
+let draggedPattern = null;
+let dragPointerId = null;
+let dragGrabOffsetX = 0;
+let dragMoved = false;
+
+function playlistCoordinates(event) {
+    const rect = gridViewport.getBoundingClientRect();
+    return {
+        x: event.clientX - rect.left + scrollX,
+        y: event.clientY - rect.top + scrollY
+    };
+}
+
+function patternAt(x, y) {
+    const track = Math.floor(y / TRACK_HEIGHT);
+    // Reverse order so the visually topmost clip wins if clips overlap.
+    for (let i = playlistPatterns.length - 1; i >= 0; i--) {
+        const pattern = playlistPatterns[i];
+        const left = pattern.bar * BAR_WIDTH;
+        if (pattern.track === track && x >= left && x <= left + BAR_WIDTH) {
+            return pattern;
+        }
+    }
+    return null;
+}
+
+function removePattern(pattern) {
+    const index = playlistPatterns.indexOf(pattern);
+    if (index === -1) return;
+    const removed = playlistPatterns.splice(index, 1)[0];
+    deleteSilhouettes.push({
+        bar: removed.bar,
+        track: removed.track,
+        startedAt: performance.now()
+    });
+    if (!silhouetteAnimationFrame) {
+        silhouetteAnimationFrame = requestAnimationFrame(animateDeleteSilhouettes);
+    }
+    renderPlaylist();
+}
+
+function snapBarPosition(contentX, useFineSnap = false) {
+    const step = useFineSnap ? ALT_SNAP : DEFAULT_SNAP;
+    return Math.max(0, Math.round(contentX / step) * step / BAR_WIDTH);
+}
+
+gridViewport.addEventListener("pointerdown", event => {
+    if (event.button !== 0 && event.button !== 2) return;
+    const point = playlistCoordinates(event);
+    const hit = patternAt(point.x, point.y);
+
+    // Right-click is a quick-delete gesture regardless of the selected tool.
+    if (event.button === 2) {
+        event.preventDefault();
+        if (hit) removePattern(hit);
+        return;
+    }
+
+    if (selectedTool === "delete") {
+        if (hit) removePattern(hit);
+        return;
+    }
+
+    if (hit) {
+        draggedPattern = hit;
+        dragPointerId = event.pointerId;
+        dragGrabOffsetX = point.x - hit.bar * BAR_WIDTH;
+        dragMoved = false;
+        gridViewport.setPointerCapture(event.pointerId);
+        event.preventDefault();
+        return;
+    }
+
+    const barPosition = snapBarPosition(point.x, event.altKey);
+    const track = Math.max(0, Math.min(MAX_TRACKS - 1,
+        Math.floor(point.y / TRACK_HEIGHT)));
+    const duplicate = playlistPatterns.some(pattern =>
+        pattern.track === track && Math.abs(pattern.bar - barPosition) < 0.000001
+    );
+
+    if (!duplicate) {
+        const newPattern = {
+            id: nextPatternId++,
+            number: selectedPattern,
+            bar: barPosition,
+            track
+        };
+        playlistPatterns.push(newPattern);
+
+        // Keep the pointer gesture active after placement: if the user
+        // continues holding and moves, the new clip follows immediately.
+        draggedPattern = newPattern;
+        dragPointerId = event.pointerId;
+        dragGrabOffsetX = point.x - barPosition * BAR_WIDTH;
+        dragMoved = false;
+        gridViewport.setPointerCapture(event.pointerId);
+        event.preventDefault();
+        renderPlaylist();
+    }
+});
+
+gridViewport.addEventListener("pointermove", event => {
+    const point = playlistCoordinates(event);
+
+    if (draggedPattern && event.pointerId === dragPointerId) {
+        const nextBar = snapBarPosition(point.x - dragGrabOffsetX, event.altKey);
+        const nextTrack = Math.max(0, Math.min(MAX_TRACKS - 1,
+            Math.floor(point.y / TRACK_HEIGHT)));
+
+        if (Math.abs(nextBar - draggedPattern.bar) > 0.000001 ||
+            nextTrack !== draggedPattern.track) {
+            draggedPattern.bar = nextBar;
+            draggedPattern.track = nextTrack;
+            dragMoved = true;
+            renderPlaylist();
+        }
+        event.preventDefault();
+        return;
+    }
+
+    // A four-way move cursor communicates that clips can be moved in
+    // either timeline direction or between tracks.
+    gridViewport.style.cursor = patternAt(point.x, point.y) ? "move" : "default";
+});
+
+function finishPatternDrag(event) {
+    if (!draggedPattern || (event && event.pointerId !== dragPointerId)) return;
+    const pointerId = dragPointerId;
+    draggedPattern = null;
+    dragPointerId = null;
+    dragMoved = false;
+    if (pointerId !== null && gridViewport.hasPointerCapture(pointerId)) {
+        gridViewport.releasePointerCapture(pointerId);
+    }
+    renderPlaylist();
+}
+
+gridViewport.addEventListener("pointerup", finishPatternDrag);
+gridViewport.addEventListener("pointercancel", finishPatternDrag);
+gridViewport.addEventListener("lostpointercapture", event => {
+    if (draggedPattern && event.pointerId === dragPointerId) {
+        draggedPattern = null;
+        dragPointerId = null;
+        renderPlaylist();
+    }
+});
+
 const gridResizeObserver = new ResizeObserver(() => renderPlaylist());
 gridResizeObserver.observe(gridViewport);
 
@@ -1423,5 +1872,5 @@ loadBrowserFolder("");
 renderPlaylist();
 </script>
 
-</body>
-</html>
+
+</body></html>

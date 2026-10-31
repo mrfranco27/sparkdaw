@@ -4,9 +4,9 @@ header("Content-Type: application/json; charset=utf-8");
 header("Cache-Control: no-store");
 
 $root = __DIR__
-    . DIRECTORY_SEPARATOR . "assets"
-    . DIRECTORY_SEPARATOR . "audio"
-    . DIRECTORY_SEPARATOR . "browser";
+    . DIRECTORY_SEPARATOR . "Assets"
+    . DIRECTORY_SEPARATOR . "Audio"
+    . DIRECTORY_SEPARATOR . "Browser";
 
 /*
  * Read the requested relative directory.
